@@ -26,7 +26,7 @@ def get_data(start, end, lat, long):
     return response_df
 
 # initialize all variable
-start = '1991-01-01'
+start = '2000-01-01'
 end = '2023-07-15'
 lat = '47.22'
 long = '8.33'
@@ -51,16 +51,28 @@ year_averages = data.groupby("year")["t_avg"].mean()
 # add the average yearly temperature to all entries in the data variable
 data["t_avg_year"] = data["year"].apply(lambda year: year_averages[year])
 
-# print the year averages
-st.write(year_averages)
+# calculate the moving average
+# calculate the moving average
+window_size = 360
+moving_average = data["t_avg"].rolling(window_size).mean()
 
-st.line_chart(data = data, x="date", y=["t_avg", "t_avg_year"])
+# add the moving average to the data variable
+data["moving_average"] = moving_average
+
+# select the data according to user input
+
+data_select = data.loc[data["year"] > 2005]
+
+# print the year averages
+#st.write(year_averages)
+
+st.line_chart(data = data_select, x="date", y=["t_avg", "moving_average"])
 
 #print(data)
 #fig = px.line(data, x="date", y="t_avg")
 #fig.show()
 #print(data)
 
-st.dataframe(data)
+#st.dataframe(data)
 
-st.line_chart(data = data, x="date", y="t_avg_year")
+st.line_chart(data = data_select, x="date", y="t_avg_year")
