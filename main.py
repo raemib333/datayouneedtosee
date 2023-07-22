@@ -24,7 +24,7 @@ def get_data(start, end, lat, long):
     response_df = pd.DataFrame(response_data)
     return response_df
 
-# initialize all variables
+# initialize all variable
 start = '2023-07-02'
 end = '2023-07-15'
 lat = '47.22'
