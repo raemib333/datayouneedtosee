@@ -22,14 +22,6 @@ def get_data(start, end, lat, long):
     response_df = pd.DataFrame(response_data)
     return (response_df)
 
-'https://archive-api.open-meteo.com/v1/archive?latitude=47.222&longitude=8.33&start_date=2023-07-01&end_date=2023-07-16&hourly=temperature_2m'
-
-url = 'https://archive-api.open-meteo.com/v1/archive?latitude=47.222&longitude=8.33&start_date=2023-07-01&end_date=2023-07-16&timezone=auto&daily=temperature_2m_max&daily=temperature_2m_min'
-response = requests.get(url)
-#print(response.content)
-response_data = json.loads(response.content)
-response_df = pd.DataFrame(response_data )
-
 data = pd.DataFrame()
 data["date"] = response_df["daily"]["time"]
 data["t_max"] = response_df["daily"]["temperature_2m_max"]
