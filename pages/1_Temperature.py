@@ -117,7 +117,7 @@ delta = round(max_val - min_val,1)
 if delta > 0:
     sign = '+'
 else:
-    sign = '-'
+    sign = ''
 
 chart = create_chart(data_moving_avg)
 
