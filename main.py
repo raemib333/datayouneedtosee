@@ -4,9 +4,8 @@ import streamlit as st
 import requests
 import plotly.express as px
 import datetime
+import plotly.graph_objects as go
 
-st.set_page_config(page_title="Data you need to see",
-                   layout="wide")
 def get_data(start, end, lat, long):
     # create url
     url = 'https://archive-api.open-meteo.com/v1/archive?'
@@ -58,48 +57,49 @@ def place_set_up(lat, long):
     data["moving_average"] = moving_average
     return data
 
+def search_place(place):
+    # search place
+    # place = 'Zurich'
+    url_place = 'https://nominatim.openstreetmap.org/search?q=' + place + '&limit=1&format=json'
+    response_place = requests.get(url_place)
+    data_place = json.loads(response_place.content)
+    name = data_place[0]["display_name"]
+    lat = data_place[0]["lat"]
+    long = data_place[0]["lon"]
+    return name, lat, long
 
-#search place
-place = 'Zurich'
-url_place = 'https://nominatim.openstreetmap.org/search?q=' + place + '&limit=1&format=json'
-response_place = requests.get(url_place)
-data_place = json.loads(response_place.content)
-st.write(data_place[0]["display_name"])
-lat = data_place[0]["lat"]
-long = data_place[0]["lon"]
+st.set_page_config(page_title="Data you need to see",
+                   layout="wide")
 
-# initialize all variable
-place = pd.DataFrame()
-place["lat"] = 0
-place["long"] = 0
-place.loc[0] = [float(lat), float(long)]
+col_input, col_result = st.columns([2, 4])
+
+with col_input:
+    # get user input
+    place = st.text_input("Search for a place.", value="Zurich")
+    name, lat, long = search_place(place)
+    st.write(name)
+    place = pd.DataFrame()
+    place["lat"] = 0
+    place["long"] = 0
+    place.loc[0] = [float(lat), float(long)]
+    st.map(place, latitude="lat", longitude="long", zoom=10, size=100)
 
 # get all data for that place
 data = place_set_up(lat, long)
-
 # select the data according to user input
 data_select = data.loc[data["year"] > 2005]
-data_select = data.loc[data["year"] < 2010]
-# print the year averages
-#st.write(year_averages)
+data_select = data.loc[data["year"] < 2023]
 
 # get the value for the first and last date in the dataset
 data_moving_avg = data[data["moving_average"] > 0]
 min_val = round(float(data_moving_avg["moving_average"][data_moving_avg["date"] == data_moving_avg["date"].min()]),1)
 max_val = round(float(data_moving_avg["moving_average"][data_moving_avg["date"] == data_moving_avg["date"].max()]),1)
 delta = round(max_val - min_val,1)
-st.write(delta)
-st.metric(label="Temperature", value=str(max_val)+' °C', delta=str(delta)+' °C')
 
-st.line_chart(data=data_select, x="date", y=["t_avg", "moving_average"])
-#st.write(place)
-st.map(place, latitude="lat", longitude="long", zoom=10, size=100)
+with col_result:
+    # show the results
+    st.metric(label="Temperature", value=str(max_val)+' °C', delta=str(delta)+' °C')
+    st.line_chart(data=data_select, x="date", y=["t_avg", "moving_average"])
 
-#print(data)
-#fig = px.line(data, x="date", y="t_avg")
-#fig.show()
-#print(data)
 
-#st.dataframe(data)
 
-#st.line_chart(data = data_select, x="date", y="t_avg_year")
