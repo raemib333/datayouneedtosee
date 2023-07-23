@@ -2,9 +2,6 @@ import json
 import pandas as pd
 import streamlit as st
 import requests
-import plotly.express as px
-import datetime
-import plotly.graph_objects as go
 import altair as alt
 import math
 
