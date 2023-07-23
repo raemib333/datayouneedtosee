@@ -60,7 +60,8 @@ def place_set_up(lat, long):
 
 
 #search place
-url_place = 'https://nominatim.openstreetmap.org/search?q=Zurich&limit=1&format=json'
+place = 'Zurich'
+url_place = 'https://nominatim.openstreetmap.org/search?q=' + place + '&limit=1&format=json'
 response_place = requests.get(url_place)
 data_place = json.loads(response_place.content)
 st.write(data_place[0]["display_name"])
@@ -68,13 +69,12 @@ lat = data_place[0]["lat"]
 long = data_place[0]["lon"]
 
 # initialize all variable
-#lat = '47.22'
-#long = '8.33'
-
 place = pd.DataFrame()
 place["lat"] = 0
 place["long"] = 0
 place.loc[0] = [float(lat), float(long)]
+
+# get all data for that place
 data = place_set_up(lat, long)
 
 # select the data according to user input
@@ -82,6 +82,14 @@ data_select = data.loc[data["year"] > 2005]
 data_select = data.loc[data["year"] < 2010]
 # print the year averages
 #st.write(year_averages)
+
+# get the value for the first and last date in the dataset
+data_moving_avg = data[data["moving_average"] > 0]
+min_val = round(float(data_moving_avg["moving_average"][data_moving_avg["date"] == data_moving_avg["date"].min()]),1)
+max_val = round(float(data_moving_avg["moving_average"][data_moving_avg["date"] == data_moving_avg["date"].max()]),1)
+delta = round(max_val - min_val,1)
+st.write(delta)
+st.metric(label="Temperature", value=str(max_val)+' °C', delta=str(delta)+' °C')
 
 st.line_chart(data=data_select, x="date", y=["t_avg", "moving_average"])
 #st.write(place)
