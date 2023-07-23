@@ -84,9 +84,9 @@ def create_chart(data):
     return chart
 
 
-st.set_page_config(page_title="Data you need to see",
+st.set_page_config(page_title="Temperature",
                    layout="wide")
-
+st.sidebar.header("Temperature")
 st.title('Temperature Change 1940-2023')
 
 col_input, col_result = st.columns([2, 4], gap="large")
