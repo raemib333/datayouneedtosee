@@ -5,6 +5,8 @@ import requests
 import plotly.express as px
 import datetime
 import plotly.graph_objects as go
+import altair as alt
+import math
 
 def get_data(start, end, lat, long):
     # create url
@@ -50,7 +52,7 @@ def place_set_up(lat, long):
     data["t_avg_year"] = data["year"].apply(lambda year: year_averages[year])
 
     # calculate the moving average
-    window_size = 720
+    window_size = 1080
     moving_average = data["t_avg"].rolling(window_size).mean()
 
     # add the moving average to the data variable
@@ -66,21 +68,38 @@ def search_place(place):
     name = data_place[0]["display_name"]
     lat = data_place[0]["lat"]
     long = data_place[0]["lon"]
-    return name, lat, long
+    country = name.rsplit(',', 1)[-1]
+    name = name.split(',')[0]
+    return name, lat, long, country
+
+def create_chart(data):
+    # Rename the axis labels
+    x_axis_label = "Date"
+    y_axis_label = "Average Temperatur [°C]"
+    # calculate min and max temp value
+    min_temp = math.floor(float(data["moving_average"].min()))
+    max_temp = math.ceil(float(data["moving_average"].max()))
+    # Create the line chart with custom axis labels
+    chart = alt.Chart(data).mark_line().encode(
+        x=alt.X('date:T', title=x_axis_label),
+        y=alt.Y('moving_average:Q', title=y_axis_label, scale=alt.Scale(domain=(min_temp, max_temp)))
+    ).interactive()
+    return chart
+
 
 st.set_page_config(page_title="Data you need to see",
                    layout="wide")
 
 st.title('Temperature Change 1940-2023')
 
-col_input, col_result = st.columns([2, 4])
+col_input, col_result = st.columns([2, 4], gap="large")
 
 with col_input:
     # get user input
     st.write("#### Selct a place")
     place = st.text_input("Search for a place", value="Zurich")
-    name, lat, long = search_place(place)
-    st.write(name)
+    name, lat, long, country = search_place(place)
+    st.write(name + ',' + country)
     place = pd.DataFrame()
     place["lat"] = 0
     place["long"] = 0
@@ -103,16 +122,19 @@ if delta > 0:
 else:
     sign = '-'
 
+chart = create_chart(data_moving_avg)
 
 cont_results = st.container()
 
-with cont_results:
-    with col_result:
+with col_result:
         # show the results
         st.write("#### Results")
         st.metric(label="average Temperature 2023", value=str(max_val)+' °C', delta=str(delta)+' °C since 1940')
-        st.write("The average temperature changed by " + sign + str(delta)+' °C since 1940.')
-        st.line_chart(data=data_select, x="date", y="moving_average")
+        st.write("The average temperature in " + name + " changed by " + sign + str(delta)+' °C since 1940.')
+        st.altair_chart(chart, use_container_width=True, theme='streamlit')
+        with st.expander("Definitions"):
+            st.write("As average, the three year moving average is shown.")
+        #st.line_chart(data=data_select, x="date", y="moving_average")
 
 
 
