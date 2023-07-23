@@ -26,8 +26,8 @@ def get_data(start, end, lat, long):
 
 # set-up all data for one place
 def place_set_up(lat, long):
-    start = '2005-01-01'
-    end = '2023-07-01'
+    start = '1940-01-01'
+    end = '2023-01-01'
 
     # get the data
     raw_data = get_data(start, end, lat, long)
@@ -50,7 +50,7 @@ def place_set_up(lat, long):
     data["t_avg_year"] = data["year"].apply(lambda year: year_averages[year])
 
     # calculate the moving average
-    window_size = 360
+    window_size = 720
     moving_average = data["t_avg"].rolling(window_size).mean()
 
     # add the moving average to the data variable
@@ -71,23 +71,26 @@ def search_place(place):
 st.set_page_config(page_title="Data you need to see",
                    layout="wide")
 
+st.title('Temperature Change 1940-2023')
+
 col_input, col_result = st.columns([2, 4])
 
 with col_input:
     # get user input
-    place = st.text_input("Search for a place.", value="Zurich")
+    st.write("#### Selct a place")
+    place = st.text_input("Search for a place", value="Zurich")
     name, lat, long = search_place(place)
     st.write(name)
     place = pd.DataFrame()
     place["lat"] = 0
     place["long"] = 0
     place.loc[0] = [float(lat), float(long)]
-    st.map(place, latitude="lat", longitude="long", zoom=10, size=100)
+    st.map(place, latitude="lat", longitude="long", zoom=8, size=100)
 
 # get all data for that place
 data = place_set_up(lat, long)
 # select the data according to user input
-data_select = data.loc[data["year"] > 2005]
+data_select = data.loc[data["year"] > 1940]
 data_select = data.loc[data["year"] < 2023]
 
 # get the value for the first and last date in the dataset
@@ -95,11 +98,22 @@ data_moving_avg = data[data["moving_average"] > 0]
 min_val = round(float(data_moving_avg["moving_average"][data_moving_avg["date"] == data_moving_avg["date"].min()]),1)
 max_val = round(float(data_moving_avg["moving_average"][data_moving_avg["date"] == data_moving_avg["date"].max()]),1)
 delta = round(max_val - min_val,1)
+if delta > 0:
+    sign = '+'
+else:
+    sign = '-'
 
-with col_result:
-    # show the results
-    st.metric(label="Temperature", value=str(max_val)+' °C', delta=str(delta)+' °C')
-    st.line_chart(data=data_select, x="date", y=["t_avg", "moving_average"])
+
+cont_results = st.container()
+
+with cont_results:
+    with col_result:
+        # show the results
+        st.write("#### Results")
+        st.metric(label="average Temperature 2023", value=str(max_val)+' °C', delta=str(delta)+' °C since 1940')
+        st.write("The average temperature changed by " + sign + str(delta)+' °C since 1940.')
+        st.line_chart(data=data_select, x="date", y="moving_average")
+
 
 
 
